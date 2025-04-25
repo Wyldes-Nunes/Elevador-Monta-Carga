@@ -97,29 +97,22 @@ export async function PATCH(request: NextRequest) {
   try {
     const { id, available_quantity } = await request.json();
     
-    // Atualizar apenas a quantidade disponível
-    const updatedMaterial = await updateMaterialAvailability(
-      if (!DB) {
-  throw new Error("Database connection is not defined. Please check .env configuration.");
-}
-const updatedMaterial = await updateMaterialAvailability(
- // Verificação do DB deve estar ANTES da chamada da função
-if (!DB) {
-  throw new Error("Database connection is not defined. Please check .env configuration.");
-}
+    // Verificação do DB deve estar ANTES da chamada da função
+    if (!DB) {
+      throw new Error("Database connection is not defined. Please check .env configuration.");
+    }
 
-// Agora chama a função normalmente
-const updatedMaterial = await updateMaterialAvailability(
-  DB,
-  { id, available_quantity }
-);
+    // Agora chama a função normalmente
+    const updatedMaterial = await updateMaterialAvailability(
+      DB,
+      { id, available_quantity }
+    );
     
-    return NextResponse.json({ 
-      message: 'Disponibilidade do material atualizada com sucesso',
-      material: updatedMaterial
-    });
+    return NextResponse.json(updatedMaterial);
   } catch (error) {
-    console.error('Erro ao atualizar disponibilidade do material:', error);
-    return NextResponse.json({ error: 'Erro ao atualizar disponibilidade do material' }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }
