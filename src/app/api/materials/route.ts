@@ -103,13 +103,16 @@ export async function PATCH(request: NextRequest) {
   throw new Error("Database connection is not defined. Please check .env configuration.");
 }
 const updatedMaterial = await updateMaterialAvailability(
+ // Verificação do DB deve estar ANTES da chamada da função
+if (!DB) {
+  throw new Error("Database connection is not defined. Please check .env configuration.");
+}
+
+// Agora chama a função normalmente
+const updatedMaterial = await updateMaterialAvailability(
   DB,
   { id, available_quantity }
 );
-    
-    if (!updatedMaterial) {
-      return NextResponse.json({ error: 'Material não encontrado' }, { status: 404 });
-    }
     
     return NextResponse.json({ 
       message: 'Disponibilidade do material atualizada com sucesso',
