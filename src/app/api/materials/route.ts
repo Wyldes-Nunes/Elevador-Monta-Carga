@@ -99,8 +99,12 @@ export async function PATCH(request: NextRequest) {
     
     // Atualizar apenas a quantidade disponível
     const updatedMaterial = await updateMaterialAvailability(
-      DB,
-{ id, available_quantity }
+      if (!DB) {
+  throw new Error("Database connection is not defined. Please check .env configuration.");
+}
+const updatedMaterial = await updateMaterialAvailability(
+  DB,
+  { id, available_quantity }
 );
     
     if (!updatedMaterial) {
