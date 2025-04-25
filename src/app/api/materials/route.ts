@@ -99,10 +99,9 @@ export async function PATCH(request: NextRequest) {
     
     // Atualizar apenas a quantidade disponível
     const updatedMaterial = await updateMaterialAvailability(
-      DB, 
-      id, 
-      available_quantity
-    );
+      DB,
+{ id, available_quantity }
+);
     
     if (!updatedMaterial) {
       return NextResponse.json({ error: 'Material não encontrado' }, { status: 404 });
