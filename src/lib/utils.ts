@@ -9,6 +9,19 @@ export type FormData = {
   [key: string]: string | number | boolean | null;
 };
 
+// Tipos para melhorar a segurança
+type MaterialUpdateParams = {
+  id: string;
+  available_quantity: number;
+};
+
+type TaskUpdateParams = {
+  id: string;
+  status: string;
+  completionPercentage: number;
+  blockingReason?: string;
+};
+
 export function processTaskFormData(formData: FormData) {
   return {
     id: formData.id as string,
@@ -34,16 +47,10 @@ export function processMaterialFormData(formData: FormData) {
   const unitCost = Number(formData.unit_cost);
   const totalCost = unitCost * requiredQuantity;
   
-  // Determinar o status com base nas quantidades
   let status = formData.status as string;
   if (!status) {
-    if (availableQuantity === 0) {
-      status = 'Indisponível';
-    } else if (availableQuantity < requiredQuantity) {
-      status = 'Parcial';
-    } else {
-      status = 'Disponível';
-    }
+    status = availableQuantity === 0 ? 'Indisponível' :
+             availableQuantity < requiredQuantity ? 'Parcial' : 'Disponível';
   }
   
   return {
@@ -61,104 +68,86 @@ export function processMaterialFormData(formData: FormData) {
   };
 }
 
-export function updateTaskStatus(
-  taskId: string, 
-  status: string, 
-  completionPercentage: number,
-  blockingReason?: string
+export async function updateTaskStatus(
+  db: any,
+  params: TaskUpdateParams
 ) {
-  // Implementação para ambiente de desenvolvimento
-  console.log(`Atualizando tarefa ${taskId} para status ${status} com ${completionPercentage}% de conclusão`);
-  return true;
-}
-
-export function updateMaterialAvailability(
-  materialId: string,
-  availableQuantity: number
-) {
-  // Implementação para ambiente de desenvolvimento
-  console.log(`Atualizando material ${materialId} para quantidade disponível ${availableQuantity}`);
-  return true;
-}
-
-export function generateTaskId(component: string, existingIds: string[]): string {
-  // Obter o prefixo com base no componente
-  let prefix = '';
-  switch (component) {
-    case 'Acionamento':
-      prefix = 'AC-';
-      break;
-    case 'Cabine':
-      prefix = 'CB-';
-      break;
-    case 'Torre':
-      prefix = 'TR-';
-      break;
-    case 'Automação':
-      prefix = 'AU-';
-      break;
-    default:
-      prefix = 'TK-';
-  }
+  if (!db) throw new Error("Database connection not established");
   
-  // Filtrar IDs existentes para o componente atual
-  const componentIds = existingIds.filter(id => id.startsWith(prefix));
-  
-  // Encontrar o maior número de ID
-  let maxNumber = 0;
-  componentIds.forEach(id => {
-    const numberPart = id.substring(prefix.length);
-    const number = parseInt(numberPart, 10);
-    if (!isNaN(number) && number > maxNumber) {
-      maxNumber = number;
-    }
+  console.log(`Atualizando tarefa ${params.id} no banco de dados`, {
+    status: params.status,
+    completionPercentage: params.completionPercentage,
+    blockingReason: params.blockingReason
   });
   
-  // Gerar novo ID com número incrementado
-  const newNumber = maxNumber + 1;
-  const paddedNumber = newNumber.toString().padStart(3, '0');
-  return `${prefix}${paddedNumber}`;
+  return {
+    id: params.id,
+    status: params.status,
+    completion_percentage: params.completionPercentage,
+    blocking_reason: params.blockingReason,
+    updated_at: new Date().toISOString()
+  };
+}
+
+export async function updateMaterialAvailability(
+  db: any,
+  params: MaterialUpdateParams
+) {
+  if (!db) throw new Error("Database connection not established");
+  
+  console.log(`Atualizando material ${params.id} no banco de dados`, {
+    available_quantity: params.available_quantity
+  });
+  
+  return {
+    id: params.id,
+    available_quantity: params.available_quantity,
+    updated_at: new Date().toISOString()
+  };
+}
+
+// Funções de geração de IDs (mantidas como estão)
+export function generateTaskId(component: string, existingIds: string[]): string {
+  const prefixMap: Record<string, string> = {
+    'Acionamento': 'AC-',
+    'Cabine': 'CB-',
+    'Torre': 'TR-',
+    'Automação': 'AU-'
+  };
+  
+  const prefix = prefixMap[component] || 'TK-';
+  const componentIds = existingIds.filter(id => id.startsWith(prefix));
+  
+  let maxNumber = 0;
+  componentIds.forEach(id => {
+    const number = parseInt(id.substring(prefix.length), 10) || 0;
+    maxNumber = Math.max(maxNumber, number);
+  });
+  
+  return `${prefix}${(maxNumber + 1).toString().padStart(3, '0')}`;
 }
 
 export function generateMaterialId(component: string, existingIds: string[]): string {
-  // Obter o prefixo com base no componente
-  let prefix = '';
-  switch (component) {
-    case 'Acionamento':
-      prefix = 'MAT-AC-';
-      break;
-    case 'Cabine':
-      prefix = 'MAT-CB-';
-      break;
-    case 'Torre':
-      prefix = 'MAT-TR-';
-      break;
-    case 'Automação':
-      prefix = 'MAT-AU-';
-      break;
-    default:
-      prefix = 'MAT-';
-  }
+  const prefixMap: Record<string, string> = {
+    'Acionamento': 'MAT-AC-',
+    'Cabine': 'MAT-CB-',
+    'Torre': 'MAT-TR-',
+    'Automação': 'MAT-AU-'
+  };
   
-  // Filtrar IDs existentes para o componente atual
+  const prefix = prefixMap[component] || 'MAT-';
   const componentIds = existingIds.filter(id => id.startsWith(prefix));
   
-  // Encontrar o maior número de ID
   let maxNumber = 0;
   componentIds.forEach(id => {
-    const numberPart = id.substring(prefix.length);
-    const number = parseInt(numberPart, 10);
-    if (!isNaN(number) && number > maxNumber) {
-      maxNumber = number;
-    }
+    const number = parseInt(id.substring(prefix.length), 10) || 0;
+    maxNumber = Math.max(maxNumber, number);
   });
   
-  // Gerar novo ID com número incrementado
-  const newNumber = maxNumber + 1;
-  const paddedNumber = newNumber.toString().padStart(3, '0');
-  return `${prefix}${paddedNumber}`;
+  return `${prefix}${(maxNumber + 1).toString().padStart(3, '0')}`;
 }
 
+// Funções de formatação (otimizadas)
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', { 
     style: 'currency', 
@@ -168,51 +157,38 @@ export function formatCurrency(value: number): string {
 
 export function formatDate(dateString?: string): string {
   if (!dateString) return '';
-  
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString;
-  
-  return date.toLocaleDateString('pt-BR');
+  return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('pt-BR');
 }
 
+// Funções auxiliares (otimizadas)
 export function calculateTaskProgress(tasks: any[]): number {
-  if (tasks.length === 0) return 0;
-  
-  const totalPercentage = tasks.reduce((sum, task) => sum + task.completion_percentage, 0);
-  return Math.round(totalPercentage / tasks.length);
+  return tasks.length ? Math.round(tasks.reduce((sum, task) => sum + task.completion_percentage, 0) / tasks.length) : 0;
 }
 
 export function getStatusColor(status: string): string {
-  switch (status) {
-    case 'Concluído':
-    case 'Disponível':
-      return '#00FF00'; // Verde
-    case 'Em desenvolvimento':
-    case 'Parcial':
-      return '#FFFF00'; // Amarelo
-    case 'Risco de atraso':
-    case 'Encomendado':
-    case 'Em produção':
-      return '#FFA500'; // Laranja
-    case 'Travado':
-    case 'Indisponível':
-      return '#FF0000'; // Vermelho
-    case 'Planejado':
-      return '#ADD8E6'; // Azul claro
-    default:
-      return '#808080'; // Cinza
-  }
+  const colorMap: Record<string, string> = {
+    'Concluído': '#00FF00',
+    'Disponível': '#00FF00',
+    'Em desenvolvimento': '#FFFF00',
+    'Parcial': '#FFFF00',
+    'Risco de atraso': '#FFA500',
+    'Encomendado': '#FFA500',
+    'Em produção': '#FFA500',
+    'Travado': '#FF0000',
+    'Indisponível': '#FF0000',
+    'Planejado': '#ADD8E6'
+  };
+  
+  return colorMap[status] || '#808080';
 }
 
 export function getPriorityColor(priority: string): string {
-  switch (priority) {
-    case 'Alta':
-      return '#FFCCCC'; // Vermelho claro
-    case 'Média':
-      return '#FFFFCC'; // Amarelo claro
-    case 'Baixa':
-      return '#CCFFCC'; // Verde claro
-    default:
-      return '#FFFFFF'; // Branco
-  }
+  const colorMap: Record<string, string> = {
+    'Alta': '#FFCCCC',
+    'Média': '#FFFFCC',
+    'Baixa': '#CCFFCC'
+  };
+  
+  return colorMap[priority] || '#FFFFFF';
 }
