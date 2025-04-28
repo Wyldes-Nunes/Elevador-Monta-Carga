@@ -1,4 +1,32 @@
-import { type ClassValue, clsx } from "clsx";
+// Adicione este tipo no início do arquivo
+type TaskUpdateParams = {
+  id: string;
+  status: string;
+  completionPercentage: number;
+  blockingReason?: string;
+};
+
+// Corrija a função updateTaskStatus
+export async function updateTaskStatus(
+  db: any,
+  params: TaskUpdateParams
+) {
+  if (!db) throw new Error("Database connection not established");
+  
+  console.log(`Atualizando tarefa ${params.id}`, {
+    status: params.status,
+    completionPercentage: params.completionPercentage,
+    blockingReason: params.blockingReason
+  });
+  
+  return {
+    id: params.id,
+    status: params.status,
+    completion_percentage: params.completionPercentage,
+    blocking_reason: params.blockingReason,
+    updated_at: new Date().toISOString()
+  };
+}import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
