@@ -95,20 +95,20 @@ export async function PATCH(request: NextRequest) {
   const { DB } = await getCloudflareContext();
   
   try {
-    const { id, available_quantity } = await request.json();
+    const { id, status, completion_percentage, blocking_reason } = await request.json();
     
-    // Verificação do DB deve estar ANTES da chamada da função
     if (!DB) {
-      throw new Error("Database connection is not defined. Please check .env configuration.");
+      throw new Error("Database connection is not defined");
     }
 
-    // Agora chama a função normalmente
-    const updatedMaterial = await updateMaterialAvailability(
-      DB,
-      { id, available_quantity }
-    );
+    const updatedTask = await updateTaskStatus(DB, {
+      id,
+      status,
+      completionPercentage: completion_percentage,
+      blockingReason: blocking_reason
+    });
     
-    return NextResponse.json(updatedMaterial);
+    return NextResponse.json(updatedTask);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
