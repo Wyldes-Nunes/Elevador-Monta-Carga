@@ -20,24 +20,18 @@ export async function GET(request: NextRequest) {
   
   try {
     if (id) {
-      // Obter tarefa específica por ID
       const task = await getTaskById(DB, id);
-      
       if (!task) {
         return NextResponse.json({ error: 'Tarefa não encontrada' }, { status: 404 });
       }
-      
       return NextResponse.json(task);
     } else if (component) {
-      // Obter tarefas por componente
       const tasks = await getTasksByComponent(DB, component);
       return NextResponse.json(tasks);
     } else if (critical === 'true') {
-      // Obter tarefas críticas
       const tasks = await getCriticalTasks(DB);
       return NextResponse.json(tasks);
     } else {
-      // Obter todas as tarefas
       const tasks = await getTasks(DB);
       return NextResponse.json(tasks);
     }
@@ -53,10 +47,8 @@ export async function POST(request: NextRequest) {
   try {
     const task = await request.json();
     
-    // Verificar se já existe uma tarefa com o mesmo ID
     if (task.id) {
       const existingTask = await getTaskById(DB, task.id);
-      
       if (existingTask) {
         return NextResponse.json({ error: 'Já existe uma tarefa com este ID' }, { status: 400 });
       }
@@ -75,8 +67,6 @@ export async function PUT(request: NextRequest) {
   
   try {
     const task = await request.json();
-    
-    // Verificar se a tarefa existe
     const existingTask = await getTaskById(DB, task.id);
     
     if (!existingTask) {
@@ -97,25 +87,22 @@ export async function PATCH(request: NextRequest) {
   try {
     const { id, status, completion_percentage, blocking_reason } = await request.json();
     
-    // Atualizar apenas o status e percentual de conclusão
-    const updatedTask = await updateTaskStatus(
-      DB, 
-      id, 
-      status, 
-      completion_percentage, 
-      blocking_reason
-    );
-    
-    if (!updatedTask) {
-      return NextResponse.json({ error: 'Tarefa não encontrada' }, { status: 404 });
+    if (!DB) {
+      throw new Error("Database connection is not defined");
     }
-    
-    return NextResponse.json({ 
-      message: 'Status da tarefa atualizado com sucesso',
-      task: updatedTask
+
+    const updatedTask = await updateTaskStatus(DB, {
+      id,
+      status,
+      completionPercentage: completion_percentage,
+      blockingReason: blocking_reason
     });
+    
+    return NextResponse.json(updatedTask);
   } catch (error) {
-    console.error('Erro ao atualizar status da tarefa:', error);
-    return NextResponse.json({ error: 'Erro ao atualizar status da tarefa' }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }
