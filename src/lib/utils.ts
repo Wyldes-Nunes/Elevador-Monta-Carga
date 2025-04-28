@@ -1,34 +1,7 @@
-// Adicione este tipo no início do arquivo
-type TaskUpdateParams = {
-  id: string;
-  status: string;
-  completionPercentage: number;
-  blockingReason?: string;
-};
-
-// Corrija a função updateTaskStatus
-export async function updateTaskStatus(
-  db: any,
-  params: TaskUpdateParams
-) {
-  if (!db) throw new Error("Database connection not established");
-  
-  console.log(`Atualizando tarefa ${params.id}`, {
-    status: params.status,
-    completionPercentage: params.completionPercentage,
-    blockingReason: params.blockingReason
-  });
-  
-  return {
-    id: params.id,
-    status: params.status,
-    completion_percentage: params.completionPercentage,
-    blocking_reason: params.blockingReason,
-    updated_at: new Date().toISOString()
-  };
-}import { type ClassValue, clsx } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+// Funções utilitárias básicas
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -37,7 +10,7 @@ export type FormData = {
   [key: string]: string | number | boolean | null;
 };
 
-// Tipos para melhorar a segurança
+// Tipos para operações de banco de dados
 type MaterialUpdateParams = {
   id: string;
   available_quantity: number;
@@ -50,6 +23,7 @@ type TaskUpdateParams = {
   blockingReason?: string;
 };
 
+// Processamento de formulários
 export function processTaskFormData(formData: FormData) {
   return {
     id: formData.id as string,
@@ -96,13 +70,14 @@ export function processMaterialFormData(formData: FormData) {
   };
 }
 
+// Operações de banco de dados
 export async function updateTaskStatus(
   db: any,
   params: TaskUpdateParams
 ) {
   if (!db) throw new Error("Database connection not established");
   
-  console.log(`Atualizando tarefa ${params.id} no banco de dados`, {
+  console.log(`Atualizando tarefa ${params.id}`, {
     status: params.status,
     completionPercentage: params.completionPercentage,
     blockingReason: params.blockingReason
@@ -123,7 +98,7 @@ export async function updateMaterialAvailability(
 ) {
   if (!db) throw new Error("Database connection not established");
   
-  console.log(`Atualizando material ${params.id} no banco de dados`, {
+  console.log(`Atualizando material ${params.id}`, {
     available_quantity: params.available_quantity
   });
   
@@ -134,7 +109,7 @@ export async function updateMaterialAvailability(
   };
 }
 
-// Funções de geração de IDs (mantidas como estão)
+// Funções auxiliares
 export function generateTaskId(component: string, existingIds: string[]): string {
   const prefixMap: Record<string, string> = {
     'Acionamento': 'AC-',
@@ -175,7 +150,7 @@ export function generateMaterialId(component: string, existingIds: string[]): st
   return `${prefix}${(maxNumber + 1).toString().padStart(3, '0')}`;
 }
 
-// Funções de formatação (otimizadas)
+// Funções de formatação
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', { 
     style: 'currency', 
@@ -189,11 +164,14 @@ export function formatDate(dateString?: string): string {
   return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('pt-BR');
 }
 
-// Funções auxiliares (otimizadas)
+// Funções de cálculo
 export function calculateTaskProgress(tasks: any[]): number {
-  return tasks.length ? Math.round(tasks.reduce((sum, task) => sum + task.completion_percentage, 0) / tasks.length) : 0;
+  return tasks.length ? 
+    Math.round(tasks.reduce((sum, task) => sum + task.completion_percentage, 0) / tasks.length) : 
+    0;
 }
 
+// Funções de estilo
 export function getStatusColor(status: string): string {
   const colorMap: Record<string, string> = {
     'Concluído': '#00FF00',
