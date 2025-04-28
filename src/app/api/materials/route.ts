@@ -20,24 +20,18 @@ export async function GET(request: NextRequest) {
   
   try {
     if (id) {
-      // Obter material específico por ID
       const material = await getMaterialById(DB, id);
-      
       if (!material) {
         return NextResponse.json({ error: 'Material não encontrado' }, { status: 404 });
       }
-      
       return NextResponse.json(material);
     } else if (component) {
-      // Obter materiais por componente
       const materials = await getMaterialsByComponent(DB, component);
       return NextResponse.json(materials);
     } else if (critical === 'true') {
-      // Obter materiais críticos
       const materials = await getCriticalMaterials(DB);
       return NextResponse.json(materials);
     } else {
-      // Obter todos os materiais
       const materials = await getMaterials(DB);
       return NextResponse.json(materials);
     }
@@ -53,10 +47,8 @@ export async function POST(request: NextRequest) {
   try {
     const material = await request.json();
     
-    // Verificar se já existe um material com o mesmo ID
     if (material.id) {
       const existingMaterial = await getMaterialById(DB, material.id);
-      
       if (existingMaterial) {
         return NextResponse.json({ error: 'Já existe um material com este ID' }, { status: 400 });
       }
@@ -75,8 +67,6 @@ export async function PUT(request: NextRequest) {
   
   try {
     const material = await request.json();
-    
-    // Verificar se o material existe
     const existingMaterial = await getMaterialById(DB, material.id);
     
     if (!existingMaterial) {
@@ -95,20 +85,18 @@ export async function PATCH(request: NextRequest) {
   const { DB } = await getCloudflareContext();
   
   try {
-    const { id, status, completion_percentage, blocking_reason } = await request.json();
+    const { id, available_quantity } = await request.json();
     
     if (!DB) {
       throw new Error("Database connection is not defined");
     }
 
-    const updatedTask = await updateTaskStatus(DB, {
+    const updatedMaterial = await updateMaterialAvailability(DB, {
       id,
-      status,
-      completionPercentage: completion_percentage,
-      blockingReason: blocking_reason
+      available_quantity
     });
     
-    return NextResponse.json(updatedTask);
+    return NextResponse.json(updatedMaterial);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
