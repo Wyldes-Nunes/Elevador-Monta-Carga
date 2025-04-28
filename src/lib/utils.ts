@@ -1,10 +1,13 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-// Função utilitária para classes CSS
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Tipos e funções restantes mantidos conforme versão anterior
+// ... [mantenha o restante do arquivo como estava]
+
 
 // Tipos de dados
 export type FormData = {
